@@ -1,5 +1,5 @@
 const express = require('express');
-const { listarTodas, buscarPorId, criar, atualizar, deletar } = require('./taskflow-api/src/utils/tarefas');
+const { listarTodas, buscarPorId, criar, atualizar, deletar } = require('./src/utils/tarefas');
 
 const app = express();
 const PORTA = 3000;

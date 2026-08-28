@@ -1,5 +1,3 @@
-// Módulo para gerenciar dados das tarefas
-
 let tarefas = [
   { id: 1, texto: 'Estudar Node', prioridade: 'alta', coluna: 'afazer', cidade: 'Natal/RN' },
   { id: 2, texto: 'Criar API', prioridade: 'alta', coluna: 'andamento', cidade: 'Natal/RN' },
@@ -55,5 +53,4 @@ function deletar(id) {
   return true;
 }
 
-// Exportando todas as funções de manipulação do CRUD
 module.exports = { listarTodas, buscarPorId, criar, atualizar, deletar };

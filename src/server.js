@@ -6,12 +6,10 @@ const PORTA = 3000;
 
 app.use(express.json());
 
-// GET / — Status da API
 app.get('/', (req, res) => {
   res.json({ api: 'TaskFlow', versao: '1.0', status: 'online' });
 });
 
-// POST / — Criar tarefa na RAIZ (fallback para URLs sem /tarefas)
 app.post('/', (req, res) => {
   const { texto, prioridade, coluna, cidade } = req.body;
 
@@ -23,14 +21,12 @@ app.post('/', (req, res) => {
   res.status(201).json(novaTarefa);
 });
 
-// GET /tarefas — Listar todas e filtrar via req.query
 app.get('/tarefas', (req, res) => {
   const { coluna, prioridade } = req.query;
   const resultado = listarTodas(coluna, prioridade);
   res.json(resultado);
 });
 
-// GET /tarefas/:id — Buscar tarefa por ID
 app.get('/tarefas/:id', (req, res) => {
   const id = Number(req.params.id);
   const tarefa = buscarPorId(id);
@@ -42,7 +38,6 @@ app.get('/tarefas/:id', (req, res) => {
   res.json(tarefa);
 });
 
-// POST /tarefas — Criar nova tarefa
 app.post('/tarefas', (req, res) => {
   const { texto, prioridade, coluna, cidade } = req.body;
 
@@ -54,7 +49,6 @@ app.post('/tarefas', (req, res) => {
   res.status(201).json(novaTarefa);
 });
 
-// PUT /tarefas/:id — Substituir dados de uma tarefa existente
 app.put('/tarefas/:id', (req, res) => {
   const id = Number(req.params.id);
   const { texto, prioridade, coluna, cidade } = req.body;
@@ -72,7 +66,6 @@ app.put('/tarefas/:id', (req, res) => {
   res.json(tarefaAtualizada);
 });
 
-// DELETE /tarefas/:id — Remover uma tarefa por ID
 app.delete('/tarefas/:id', (req, res) => {
   const id = Number(req.params.id);
   const removido = deletar(id);
@@ -82,9 +75,8 @@ app.delete('/tarefas/:id', (req, res) => {
   }
 
   res.json({ mensagem: 'Tarefa removida com sucesso', id });
-});
+})
 
-// Rota 404 genérica (Sempre por último)
 app.use((req, res) => {
   res.status(404).json({
     erro: 'Rota não encontrada',

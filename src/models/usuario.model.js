@@ -22,7 +22,7 @@ function criar(nome, email) {
 function atualizar(id, dados) {
   const indice = usuarios.findIndex((u) => u.id === id);
   if (indice === -1) return null;
-
+l
   usuarios[indice] = { ...usuarios[indice], ...dados, id };
   return usuarios[indice];
 }

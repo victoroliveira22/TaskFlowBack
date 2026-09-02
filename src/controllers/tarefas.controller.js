@@ -1,5 +1,6 @@
-let tarefas = [];
+let tarefas = [deletar];
 let proximoId = 1;
+
 
 const tarefasController = {
   listar(req, res) {

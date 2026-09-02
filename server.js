@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
 
 app.post('/', (req, res) => {
   res.json({ 
-    mensagem: 'API TaskFlow online. Para manipular tarefas, utilize a rota /tarefas.' 
+    mensagem: 'TaskFlow está online.' 
   });
 });
 

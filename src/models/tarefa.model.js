@@ -17,6 +17,28 @@ function buscarPorId(id) {
   return tarefas.find((t) => t.id === id);
 }
 
+function obterEstatisticas(coluna) {
+  const base = coluna ? tarefas.filter((t) => t.coluna === coluna) : tarefas;
+  const total = base.length;
+  const porColuna = {
+    afazer: base.filter((t) => t.coluna === 'afazer').length,
+    andamento: base.filter((t) => t.coluna === 'andamento').length,
+    concluido: base.filter((t) => t.coluna === 'concluido').length,
+  };
+  const porPrioridade = {
+    alta: base.filter((t) => t.prioridade === 'alta').length,
+    media: base.filter((t) => t.prioridade === 'media').length,
+    baixa: base.filter((t) => t.prioridade === 'baixa').length,
+  };
+
+  return {
+    coluna: coluna || 'todas',
+    total,
+    porColuna,
+    porPrioridade,
+  };
+}
+
 function criar(texto, prioridade = 'media', coluna = 'afazer', cidade = '') {
   const novaTarefa = {
     id: proximoId++,
@@ -53,4 +75,11 @@ function deletar(id) {
   return true;
 }
 
-module.exports = { listarTodas, buscarPorId, criar, atualizar, deletar };
+module.exports = { 
+  listarTodas, 
+  buscarPorId, 
+  obterEstatisticas, 
+  criar, 
+  atualizar, 
+  deletar 
+};

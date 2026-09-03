@@ -1,4 +1,4 @@
-let usuarios = ['ui papai cuida'];
+let usuarios = ['victor'];
 let proximoId = 1;
 
 function listar(req, res) {

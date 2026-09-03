@@ -1,4 +1,4 @@
-let tarefas = [deletar];
+let tarefas = ["ui papai cuida"];
 let proximoId = 1;
 
 

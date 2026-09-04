@@ -22,7 +22,6 @@ app.post('/', (req, res) => {
   });
 });
 
-// Rotas registradas:
 app.use('/tarefas', tarefasRoutes);
 app.use('/usuarios', usuariosRoutes);
 app.use('/projetos', projetosRoutes);

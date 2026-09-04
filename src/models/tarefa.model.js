@@ -1,85 +1,99 @@
-let tarefas = [
-  { id: 1, texto: 'Estudar Node', prioridade: 'alta', coluna: 'afazer', cidade: 'Natal/RN' },
-  { id: 2, texto: 'Criar API', prioridade: 'alta', coluna: 'andamento', cidade: 'Natal/RN' },
-  { id: 3, texto: 'Testar Postman', prioridade: 'media', coluna: 'concluido', cidade: 'Natal/RN' },
-];
+let tarefas = [];
+let idAtual = 1;
 
-let proximoId = 4;
+function listar(filtros) {
+  let listaFiltrada = [];
+  for (let i = 0; i < tarefas.length; i++) {
+    let item = tarefas[i];
+    let podeAdicionar = true;
 
-function listarTodas(coluna, prioridade) {
-  let resultado = tarefas;
-  if (coluna) resultado = resultado.filter((t) => t.coluna === coluna);
-  if (prioridade) resultado = resultado.filter((t) => t.prioridade === prioridade);
-  return resultado;
+    if (filtros && filtros.coluna && item.coluna !== filtros.coluna) {
+      podeAdicionar = false;
+    }
+    if (filtros && filtros.usuarioId && item.usuarioId != filtros.usuarioId) {
+      podeAdicionar = false;
+    }
+
+    if (podeAdicionar == true) {
+      listaFiltrada.push(item);
+    }
+  }
+  return listaFiltrada;
 }
 
 function buscarPorId(id) {
-  return tarefas.find((t) => t.id === id);
+  for (let i = 0; i < tarefas.length; i++) {
+    if (tarefas[i].id == id) {
+      return tarefas[i];
+    }
+  }
+  return null;
 }
 
-function obterEstatisticas(coluna) {
-  const base = coluna ? tarefas.filter((t) => t.coluna === coluna) : tarefas;
-  const total = base.length;
-  const porColuna = {
-    afazer: base.filter((t) => t.coluna === 'afazer').length,
-    andamento: base.filter((t) => t.coluna === 'andamento').length,
-    concluido: base.filter((t) => t.coluna === 'concluido').length,
-  };
-  const porPrioridade = {
-    alta: base.filter((t) => t.prioridade === 'alta').length,
-    media: base.filter((t) => t.prioridade === 'media').length,
-    baixa: base.filter((t) => t.prioridade === 'baixa').length,
-  };
-
-  return {
-    coluna: coluna || 'todas',
-    total,
-    porColuna,
-    porPrioridade,
-  };
+function contarAndamentoDoUsuario(idUsuario) {
+  let qtd = 0;
+  for (let i = 0; i < tarefas.length; i++) {
+    if (tarefas[i].usuarioId == idUsuario && tarefas[i].coluna === "andamento") {
+      qtd = qtd + 1;
+    }
+  }
+  return qtd;
 }
 
-function criar(texto, prioridade = 'media', coluna = 'afazer', cidade = '') {
-  const novaTarefa = {
-    id: proximoId++,
-    texto,
-    prioridade,
-    coluna,
-    cidade,
+function temTarefaDoUsuario(idUsuario) {
+  for (let i = 0; i < tarefas.length; i++) {
+    if (tarefas[i].usuarioId == idUsuario) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function criar(dados) {
+  let nova = {
+    id: idAtual,
+    texto: dados.texto,
+    prioridade: dados.prioridade,
+    coluna: dados.coluna,
+    usuarioId: dados.usuarioId,
+    dataConclusao: dados.dataConclusao
   };
-  tarefas.push(novaTarefa);
-  return novaTarefa;
+  idAtual = idAtual + 1;
+  tarefas.push(nova);
+  return nova;
 }
 
-function atualizar(id, texto, prioridade = 'media', coluna = 'afazer', cidade = '') {
-  const indice = tarefas.findIndex((t) => t.id === id);
-  if (indice === -1) return null;
-
-  const tarefaAtualizada = {
-    id,
-    texto,
-    prioridade,
-    coluna,
-    cidade,
-  };
-
-  tarefas[indice] = tarefaAtualizada;
-  return tarefaAtualizada;
+function atualizar(id, dados) {
+  for (let i = 0; i < tarefas.length; i++) {
+    if (tarefas[i].id == id) {
+      if (dados.texto !== undefined) tarefas[i].texto = dados.texto;
+      if (dados.prioridade !== undefined) tarefas[i].prioridade = dados.prioridade;
+      if (dados.coluna !== undefined) tarefas[i].coluna = dados.coluna;
+      if (dados.usuarioId !== undefined) tarefas[i].usuarioId = dados.usuarioId;
+      if (dados.dataConclusao !== undefined) tarefas[i].dataConclusao = dados.dataConclusao;
+      return tarefas[i];
+    }
+  }
+  return null;
 }
 
-function deletar(id) {
-  const tarefaExiste = tarefas.some((t) => t.id === id);
-  if (!tarefaExiste) return false;
-
-  tarefas = tarefas.filter((t) => t.id !== id);
-  return true;
+function remover(id) {
+  for (let i = 0; i < tarefas.length; i++) {
+    if (tarefas[i].id == id) {
+      let apagada = tarefas[i];
+      tarefas.splice(i, 1);
+      return apagada;
+    }
+  }
+  return null;
 }
 
-module.exports = { 
-  listarTodas, 
-  buscarPorId, 
-  obterEstatisticas, 
-  criar, 
-  atualizar, 
-  deletar 
+module.exports = {
+  listar,
+  buscarPorId,
+  contarAndamentoDoUsuario,
+  temTarefaDoUsuario,
+  criar,
+  atualizar,
+  remover
 };

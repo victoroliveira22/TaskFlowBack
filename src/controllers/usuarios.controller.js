@@ -1,26 +1,18 @@
-let usuarios = ['victor'];
-let proximoId = 1;
+const usuarioModel = require('../models/usuario.model');
+const tarefaModel = require('../models/tarefa.model');
 
 function listar(req, res) {
-  res.json(usuarios);
+  let dados = usuarioModel.listar();
+  res.json(dados);
 }
 
 function buscarPorId(req, res) {
   let id = parseInt(req.params.id);
-  let achado = null;
-
-  for (let i = 0; i < usuarios.length; i++) {
-    if (usuarios[i].id === id) {
-      achado = usuarios[i];
-      break;
-    }
+  let achei = usuarioModel.buscarPorId(id);
+  if (!achei) {
+    return res.status(404).json({ erro: "Usuario nao encontrado" });
   }
-
-  if (!achado) {
-    return res.status(404).json({ erro: "Usuário não encontrado" });
-  }
-
-  res.json(achado);
+  res.json(achei);
 }
 
 function criar(req, res) {
@@ -28,71 +20,47 @@ function criar(req, res) {
   let email = req.body.email;
 
   if (!nome || !email) {
-    return res.status(400).json({ erro: "Nome e email obrigatórios" });
+    return res.status(400).json({ erro: "Informe nome e email!" });
   }
 
-  for (let i = 0; i < usuarios.length; i++) {
-    if (usuarios[i].email === email) {
-      return res.status(400).json({ erro: "Email já cadastrado" });
-    }
+  let existe = usuarioModel.buscarPorEmail(email);
+  if (existe) {
+    return res.status(400).json({ erro: "Esse email ja esta cadastrado" });
   }
 
-  let novoUsuario = {
-    id: proximoId,
-    nome: nome,
-    email: email
-  };
-
-  proximoId = proximoId + 1;
-  usuarios.push(novoUsuario);
-
-  res.status(201).json(novoUsuario);
+  let novo = usuarioModel.criar({ nome: nome, email: email });
+  res.status(201).json(novo);
 }
 
 function atualizar(req, res) {
   let id = parseInt(req.params.id);
-  let posicao = -1;
-
-  for (let i = 0; i < usuarios.length; i++) {
-    if (usuarios[i].id === id) {
-      posicao = i;
-      break;
-    }
+  let user = usuarioModel.buscarPorId(id);
+  if (!user) {
+    return res.status(404).json({ erro: "Usuario nao encontrado" });
   }
 
-  if (posicao === -1) {
-    return res.status(404).json({ erro: "Usuário não encontrado" });
-  }
+  let alterado = usuarioModel.atualizar(id, {
+    nome: req.body.nome,
+    email: req.body.email
+  });
 
-  if (req.body.nome) {
-    usuarios[posicao].nome = req.body.nome;
-  }
-  if (req.body.email) {
-    usuarios[posicao].email = req.body.email;
-  }
-
-  res.json(usuarios[posicao]);
+  res.json(alterado);
 }
 
 function remover(req, res) {
   let id = parseInt(req.params.id);
-  let posicao = -1;
-
-  for (let i = 0; i < usuarios.length; i++) {
-    if (usuarios[i].id === id) {
-      posicao = i;
-      break;
-    }
+  let user = usuarioModel.buscarPorId(id);
+  if (!user) {
+    return res.status(404).json({ erro: "Usuario nao encontrado" });
   }
 
-  if (posicao === -1) {
-    return res.status(404).json({ erro: "Usuário não encontrado" });
+  let temTarefas = tarefaModel.temTarefaDoUsuario(id);
+  if (temTarefas) {
+    return res.status(400).json({ erro: "Nao pode apagar usuario que tem tarefas!" });
   }
 
-  let removido = usuarios[posicao];
-  usuarios.splice(posicao, 1);
-
-  res.json({ mensagem: "Usuário removido", usuario: removido });
+  let deletado = usuarioModel.remover(id);
+  res.json({ mensagem: "Usuario deletado com sucesso", usuario: deletado });
 }
 
 module.exports = {

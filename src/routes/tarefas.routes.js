@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const tarefasController = require('../controllers/tarefas.controller');
+const usuariosController = require('../controllers/usuarios.controller');
 
 router.get('/', tarefasController.listar);
 router.get('/estatisticas', tarefasController.estatisticas);

@@ -1,6 +1,6 @@
-let tarefas = ["ui papai cuida"];
+let usuarios = ['victor'];
+let tarefas = [usuarios, "fazer prova"];
 let proximoId = 1;
-
 
 const tarefasController = {
   listar(req, res) {

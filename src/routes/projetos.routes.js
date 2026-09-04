@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const projetosController = require('../controllers/projetos.controller');
+const tarefasController = require('../controllers/tarefas.controller');
+const usuariosController = require('../controllers/usuarios.controller');
 
 router.get('/', projetosController.listar);
 router.get('/:id', projetosController.buscarPorId);

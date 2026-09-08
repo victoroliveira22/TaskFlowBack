@@ -1,70 +1,23 @@
 let projetos = [];
 let proximoId = 1;
 
-function listar() {
-  return projetos;
-}
+exports.listar = () => projetos;
+exports.buscar = id => projetos.find(p => p.id === id);
 
-function buscarPorId(id) {
-  for (let i = 0; i < projetos.length; i++) {
-    if (projetos[i].id === id) {
-      return projetos[i];
-    }
-  }
-  return null;
-}
+exports.adicionar = ({ nome, descricao }) => {
+  const novo = { id: proximoId++, nome, descricao: descricao || null };
+  projetos.push(novo);
+  return novo;
+};
 
-function buscarPorNome(nome) {
-  for (let i = 0; i < projetos.length; i++) {
-    if (projetos[i].nome === nome) {
-      return projetos[i];
-    }
-  }
-  return null;
-}
+exports.atualizar = (id, dados) => {
+  const i = projetos.findIndex(p => p.id === id);
+  if (i === -1) return null;
+  projetos[i] = { ...projetos[i], ...dados, id };
+  return projetos[i];
+};
 
-function criar(dados) {
-  let novoProjeto = {
-    id: proximoId,
-    nome: dados.nome,
-    descricao: dados.descricao
-  };
-  proximoId = proximoId + 1;
-  projetos.push(novoProjeto);
-  return novoProjeto;
-}
-
-function atualizar(id, dados) {
-  for (let i = 0; i < projetos.length; i++) {
-    if (projetos[i].id === id) {
-      if (dados.nome) {
-        projetos[i].nome = dados.nome;
-      }
-      if (dados.descricao) {
-        projetos[i].descricao = dados.descricao;
-      }
-      return projetos[i];
-    }
-  }
-  return null;
-}
-
-function remover(id) {
-  for (let i = 0; i < projetos.length; i++) {
-    if (projetos[i].id === id) {
-      let removido = projetos[i];
-      projetos.splice(i, 1);
-      return removido;
-    }
-  }
-  return null;
-}
-
-module.exports = {
-  listar,
-  buscarPorId,
-  buscarPorNome,
-  criar,
-  atualizar,
-  remover
+exports.remover = id => {
+  const i = projetos.findIndex(p => p.id === id);
+  return i !== -1 ? projetos.splice(i, 1)[0] : null;
 };

@@ -1,14 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const tarefasController = require('../controllers/tarefas.controller');
-const usuariosController = require('../controllers/usuarios.controller');
+const controller = require('../controllers/tarefas.controller');
 
-router.get('/', tarefasController.listar);
-router.get('/estatisticas', tarefasController.estatisticas);
-router.get('/resumo', tarefasController.resumo);
-router.get('/:id', tarefasController.buscarPorId);
-router.post('/', tarefasController.criar);
-router.put('/:id', tarefasController.atualizar);
-router.delete('/:id', tarefasController.remover);
+router.get('/', controller.listar);
+router.get('/estatisticas', controller.estatisticas);
+router.get('/:id', controller.buscarPorId);
+router.post('/', controller.criar);
+router.put('/:id', controller.atualizar);
+router.delete('/:id', controller.remover);
 
 module.exports = router;

@@ -1,74 +1,32 @@
-let projetos = ['taskflow projetogit']
-let proximoId = 1;
+const projetosRepo = require('../models/projeto.model');
 
-function listar(req, res) {
-  res.json(projetos);
-}
+exports.listar = (req, res) => {
+  res.json(projetosRepo.listar());
+};
 
-function buscarPorId(req, res) {
-  let id = parseInt(req.params.id);
-  let achado = projetos.find(p => p.id === id);
+exports.buscarPorId = (req, res) => {
+  const proj = projetosRepo.buscar(Number(req.params.id));
+  if (!proj) return res.status(404).json({ erro: 'Projeto não encontrado' });
+  res.json(proj);
+};
 
-  if (!achado) {
-    return res.status(404).json({ erro: "Projeto não encontrado" });
-  }
+exports.criar = (req, res) => {
+  const { nome, descricao } = req.body;
+  if (!nome) return res.status(400).json({ erro: 'Nome é obrigatório' });
 
-  res.json(achado);
-}
+  res.status(201).json(projetosRepo.adicionar({ nome, descricao }));
+};
 
-function criar(req, res) {
-  let { nome, descricao } = req.body;
+exports.atualizar = (req, res) => {
+  const id = Number(req.params.id);
+  const atualizado = projetosRepo.atualizar(id, req.body);
+  if (!atualizado) return res.status(404).json({ erro: 'Projeto não encontrado' });
+  res.json(atualizado);
+};
 
-  if (!nome || !descricao) {
-    return res.status(400).json({ erro: "Nome e descrição são obrigatórios" });
-  }
-
-  for (let i = 0; i < projetos.length; i++) {
-    if (projetos[i].nome === nome) {
-      return res.status(400).json({ erro: "Projeto com este nome já cadastrado" });
-    }
-  }
-
-  let novoProjeto = {
-    id: proximoId++,
-    nome: nome,
-    descricao: descricao
-  };
-
-  projetos.push(novoProjeto);
-  res.status(201).json(novoProjeto);
-}
-
-function atualizar(req, res) {
-  let id = parseInt(req.params.id);
-  let posicao = projetos.findIndex(p => p.id === id);
-
-  if (posicao === -1) {
-    return res.status(404).json({ erro: "Projeto não encontrado" });
-  }
-
-  if (req.body.nome) projetos[posicao].nome = req.body.nome;
-  if (req.body.descricao) projetos[posicao].descricao = req.body.descricao;
-
-  res.json(projetos[posicao]);
-}
-
-function remover(req, res) {
-  let id = parseInt(req.params.id);
-  let posicao = projetos.findIndex(p => p.id === id);
-
-  if (posicao === -1) {
-    return res.status(404).json({ erro: "Projeto não encontrado" });
-  }
-
-  let removido = projetos.splice(posicao, 1)[0];
-  res.json({ mensagem: "Projeto removido", projeto: removido });
-}
-
-module.exports = {
-  listar,
-  buscarPorId,
-  criar,
-  atualizar,
-  remover
+exports.remover = (req, res) => {
+  const id = Number(req.params.id);
+  const removido = projetosRepo.remover(id);
+  if (!removido) return res.status(404).json({ erro: 'Projeto não encontrado' });
+  res.json({ mensagem: 'Projeto removido', projeto: removido });
 };

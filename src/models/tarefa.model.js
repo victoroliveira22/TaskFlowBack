@@ -1,99 +1,62 @@
-let tarefas = [];
-let idAtual = 1;
+let tarefas = [
+  { id: 1, texto: 'Estudar Node.js', prioridade: 'alta', coluna: 'andamento', usuarioId: 1, concluidaEm: null },
+  { id: 2, texto: 'Fazer exercícios', prioridade: 'media', coluna: 'afazer', usuarioId: 2, concluidaEm: null }
+];
+let proximoId = 3;
 
-function listar(filtros) {
-  let listaFiltrada = [];
-  for (let i = 0; i < tarefas.length; i++) {
-    let item = tarefas[i];
-    let podeAdicionar = true;
-
-    if (filtros && filtros.coluna && item.coluna !== filtros.coluna) {
-      podeAdicionar = false;
-    }
-    if (filtros && filtros.usuarioId && item.usuarioId != filtros.usuarioId) {
-      podeAdicionar = false;
-    }
-
-    if (podeAdicionar == true) {
-      listaFiltrada.push(item);
-    }
+exports.listar = (filtros = {}) => {
+  let list = tarefas;
+  if (filtros.coluna) {
+    list = list.filter(t => t.coluna === filtros.coluna);
   }
-  return listaFiltrada;
-}
-
-function buscarPorId(id) {
-  for (let i = 0; i < tarefas.length; i++) {
-    if (tarefas[i].id == id) {
-      return tarefas[i];
-    }
+  if (filtros.usuarioId !== undefined && filtros.usuarioId !== null) {
+    list = list.filter(t => t.usuarioId === Number(filtros.usuarioId));
   }
-  return null;
-}
+  return list;
+};
 
-function contarAndamentoDoUsuario(idUsuario) {
-  let qtd = 0;
-  for (let i = 0; i < tarefas.length; i++) {
-    if (tarefas[i].usuarioId == idUsuario && tarefas[i].coluna === "andamento") {
-      qtd = qtd + 1;
-    }
-  }
-  return qtd;
-}
+exports.buscar = id => tarefas.find(t => t.id === id);
 
-function temTarefaDoUsuario(idUsuario) {
-  for (let i = 0; i < tarefas.length; i++) {
-    if (tarefas[i].usuarioId == idUsuario) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function criar(dados) {
-  let nova = {
-    id: idAtual,
-    texto: dados.texto,
-    prioridade: dados.prioridade,
-    coluna: dados.coluna,
-    usuarioId: dados.usuarioId,
-    dataConclusao: dados.dataConclusao
+exports.adicionar = ({ texto, prioridade = 'media', coluna = 'afazer', usuarioId }) => {
+  const nova = {
+    id: proximoId++,
+    texto,
+    prioridade,
+    coluna,
+    usuarioId: usuarioId ? Number(usuarioId) : null,
+    concluidaEm: coluna === 'concluido' ? new Date().toISOString() : null
   };
-  idAtual = idAtual + 1;
   tarefas.push(nova);
   return nova;
-}
+};
 
-function atualizar(id, dados) {
-  for (let i = 0; i < tarefas.length; i++) {
-    if (tarefas[i].id == id) {
-      if (dados.texto !== undefined) tarefas[i].texto = dados.texto;
-      if (dados.prioridade !== undefined) tarefas[i].prioridade = dados.prioridade;
-      if (dados.coluna !== undefined) tarefas[i].coluna = dados.coluna;
-      if (dados.usuarioId !== undefined) tarefas[i].usuarioId = dados.usuarioId;
-      if (dados.dataConclusao !== undefined) tarefas[i].dataConclusao = dados.dataConclusao;
-      return tarefas[i];
+exports.atualizar = (id, dados) => {
+  const index = tarefas.findIndex(t => t.id === id);
+  if (index === -1) return null;
+
+  const atual = tarefas[index];
+  let concluidaEm = atual.concluidaEm;
+
+  if (dados.coluna !== undefined) {
+    if (dados.coluna === 'concluido' && atual.coluna !== 'concluido') {
+      concluidaEm = new Date().toISOString();
+    } else if (dados.coluna !== 'concluido' && atual.coluna === 'concluido') {
+      concluidaEm = null;
     }
   }
-  return null;
-}
 
-function remover(id) {
-  for (let i = 0; i < tarefas.length; i++) {
-    if (tarefas[i].id == id) {
-      let apagada = tarefas[i];
-      tarefas.splice(i, 1);
-      return apagada;
-    }
-  }
-  return null;
-}
+  tarefas[index] = {
+    ...atual,
+    ...dados,
+    id,
+    usuarioId: dados.usuarioId !== undefined ? (dados.usuarioId ? Number(dados.usuarioId) : null) : atual.usuarioId,
+    concluidaEm
+  };
 
-module.exports = {
-  listar,
-  buscarPorId,
-  contarAndamentoDoUsuario,
-  temTarefaDoUsuario,
-  criar,
-  atualizar,
-  remover
+  return tarefas[index];
+};
+
+exports.remover = id => {
+  const index = tarefas.findIndex(t => t.id === id);
+  return index !== -1 ? tarefas.splice(index, 1)[0] : null;
 };

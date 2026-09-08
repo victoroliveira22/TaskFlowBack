@@ -1,66 +1,27 @@
-let usuarios = [];
-let proximoId = 1;
+let usuarios = [
+  { id: 1, nome: 'Ana', email: 'ana@email.com' },
+  { id: 2, nome: 'Bruno', email: 'bruno@email.com' }
+];
+let proximoId = 3;
 
-function listar() {
-  return usuarios;
-}
+exports.listar = () => usuarios;
+exports.buscar = id => usuarios.find(u => u.id === id);
+exports.buscarPorEmail = email => usuarios.find(u => u.email === email);
 
-function buscarPorId(id) {
-  for (let i = 0; i < usuarios.length; i++) {
-    if (usuarios[i].id == id) {
-      return usuarios[i];
-    }
-  }
-  return null;
-}
-
-function buscarPorEmail(email) {
-  for (let i = 0; i < usuarios.length; i++) {
-    if (usuarios[i].email === email) {
-      return usuarios[i];
-    }
-  }
-  return null;
-}
-
-function criar(dados) {
-  let novo = {
-    id: proximoId,
-    nome: dados.nome,
-    email: dados.email
-  };
-  proximoId = proximoId + 1;
+exports.adicionar = ({ nome, email }) => {
+  const novo = { id: proximoId++, nome, email };
   usuarios.push(novo);
   return novo;
-}
+};
 
-function atualizar(id, dados) {
-  for (let i = 0; i < usuarios.length; i++) {
-    if (usuarios[i].id == id) {
-      if (dados.nome) usuarios[i].nome = dados.nome;
-      if (dados.email) usuarios[i].email = dados.email;
-      return usuarios[i];
-    }
-  }
-  return null;
-}
+exports.atualizar = (id, dados) => {
+  const idx = usuarios.findIndex(u => u.id === id);
+  if (idx === -1) return null;
+  usuarios[idx] = { ...usuarios[idx], ...dados, id };
+  return usuarios[idx];
+};
 
-function remover(id) {
-  for (let i = 0; i < usuarios.length; i++) {
-    if (usuarios[i].id == id) {
-      let removido = usuarios[i];
-      usuarios.splice(i, 1);
-      return removido;
-    }
-  }
-  return null;
-}
-
-module.exports = {
-  listar,
-  buscarPorId,
-  buscarPorEmail,
-  criar,
-  atualizar,
-  remover
+exports.remover = id => {
+  const idx = usuarios.findIndex(u => u.id === id);
+  return idx !== -1 ? usuarios.splice(idx, 1)[0] : null;
 };

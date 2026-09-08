@@ -1,72 +1,45 @@
-const usuarioModel = require('../models/usuario.model');
-const tarefaModel = require('../models/tarefa.model');
+const usuariosRepo = require('../models/usuario.model');
+const tarefasRepo = require('../models/tarefa.model');
 
-function listar(req, res) {
-  let dados = usuarioModel.listar();
-  res.json(dados);
-}
+exports.listar = (req, res) => {
+  res.json(usuariosRepo.listar());
+};
 
-function buscarPorId(req, res) {
-  let id = parseInt(req.params.id);
-  let achei = usuarioModel.buscarPorId(id);
-  if (!achei) {
-    return res.status(404).json({ erro: "Usuario nao encontrado" });
-  }
-  res.json(achei);
-}
+exports.buscarPorId = (req, res) => {
+  const u = usuariosRepo.buscar(Number(req.params.id));
+  if (!u) return res.status(404).json({ erro: 'Usuário não encontrado' });
+  res.json(u);
+};
 
-function criar(req, res) {
-  let nome = req.body.nome;
-  let email = req.body.email;
-
+exports.criar = (req, res) => {
+  const { nome, email } = req.body;
   if (!nome || !email) {
-    return res.status(400).json({ erro: "Informe nome e email!" });
+    return res.status(400).json({ erro: 'Informe nome e email!' });
+  }
+  if (usuariosRepo.buscarPorEmail(email)) {
+    return res.status(400).json({ erro: 'Esse email já está cadastrado' });
   }
 
-  let existe = usuarioModel.buscarPorEmail(email);
-  if (existe) {
-    return res.status(400).json({ erro: "Esse email ja esta cadastrado" });
-  }
+  res.status(201).json(usuariosRepo.adicionar({ nome, email }));
+};
 
-  let novo = usuarioModel.criar({ nome: nome, email: email });
-  res.status(201).json(novo);
-}
+exports.atualizar = (req, res) => {
+  const id = Number(req.params.id);
+  const atualizado = usuariosRepo.atualizar(id, req.body);
+  if (!atualizado) return res.status(404).json({ erro: 'Usuário não encontrado' });
+  res.json(atualizado);
+};
 
-function atualizar(req, res) {
-  let id = parseInt(req.params.id);
-  let user = usuarioModel.buscarPorId(id);
-  if (!user) {
-    return res.status(404).json({ erro: "Usuario nao encontrado" });
-  }
+exports.remover = (req, res) => {
+  const id = Number(req.params.id);
+  const user = usuariosRepo.buscar(id);
+  if (!user) return res.status(404).json({ erro: 'Usuário não encontrado' });
 
-  let alterado = usuarioModel.atualizar(id, {
-    nome: req.body.nome,
-    email: req.body.email
-  });
-
-  res.json(alterado);
-}
-
-function remover(req, res) {
-  let id = parseInt(req.params.id);
-  let user = usuarioModel.buscarPorId(id);
-  if (!user) {
-    return res.status(404).json({ erro: "Usuario nao encontrado" });
-  }
-
-  let temTarefas = tarefaModel.temTarefaDoUsuario(id);
+  const temTarefas = tarefasRepo.listar({ usuarioId: id }).length > 0;
   if (temTarefas) {
-    return res.status(400).json({ erro: "Nao pode apagar usuario que tem tarefas!" });
+    return res.status(400).json({ erro: 'Usuário possui tarefas. Remova as tarefas antes.' });
   }
 
-  let deletado = usuarioModel.remover(id);
-  res.json({ mensagem: "Usuario deletado com sucesso", usuario: deletado });
-}
-
-module.exports = {
-  listar,
-  buscarPorId,
-  criar,
-  atualizar,
-  remover
+  const removido = usuariosRepo.remover(id);
+  res.json({ mensagem: 'Usuário deletado com sucesso', usuario: removido });
 };

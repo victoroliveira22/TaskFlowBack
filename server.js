@@ -1,16 +1,21 @@
 const express = require('express');
 
-const tarefasRoutes = require('./src/routes/tarefas.routes');
-const usuariosRoutes = require('./src/routes/usuarios.routes');
-const projetosRoutes = require('./src/routes/projetos.routes');
+const logger = require('./middlewares/logger');
+const validarContentType = require('./middlewares/validarContentType');
+
+const tarefasRoutes = require('./routes/tarefas.routes');
+const usuariosRoutes = require('./routes/usuarios.routes');
+const projetosRoutes = require('./routes/projetos.routes');
 
 const app = express();
 const PORTA = 3000;
 
 app.use(express.json());
+app.use(validarContentType);
+app.use(logger);
 
 app.get('/', (req, res) => {
-  res.json({ mensagem: 'API rodando com sucesso!' });
+  res.json({ mensagem: 'API TaskFlow rodando com sucesso!' });
 });
 
 app.use('/tarefas', tarefasRoutes);

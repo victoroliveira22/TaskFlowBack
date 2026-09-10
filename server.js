@@ -1,15 +1,22 @@
+require('dotenv').config();
+
 const express = require('express');
+const cors = require('cors');
 
-const logger = require('./middlewares/logger');
-const validarContentType = require('./middlewares/validarContentType');
+const logger = require('./src/middlewares/logger');
+const validarContentType = require('./src/middlewares/validarContentType');
 
-const tarefasRoutes = require('./routes/tarefas.routes');
-const usuariosRoutes = require('./routes/usuarios.routes');
-const projetosRoutes = require('./routes/projetos.routes');
+const authRoutes = require('./src/routes/auth.routes');
+const tarefasRoutes = require('./src/routes/tarefas.routes');
+const usuariosRoutes = require('./src/routes/usuarios.routes');
+const projetosRoutes = require('./src/routes/projetos.routes');
 
 const app = express();
-const PORTA = 3000;
+const PORTA = process.env.PORTA || 3001;
 
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:5173'
+}));
 app.use(express.json());
 app.use(validarContentType);
 app.use(logger);
@@ -18,6 +25,7 @@ app.get('/', (req, res) => {
   res.json({ mensagem: 'API TaskFlow rodando com sucesso!' });
 });
 
+app.use('/auth', authRoutes);
 app.use('/tarefas', tarefasRoutes);
 app.use('/usuarios', usuariosRoutes);
 app.use('/projetos', projetosRoutes);

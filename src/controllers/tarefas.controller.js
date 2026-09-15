@@ -16,28 +16,20 @@ exports.buscarPorId = (req, res) => {
 };
 
 exports.criar = (req, res) => {
-  const { texto, prioridade, coluna, usuarioId } = req.body;
+  const dados = {
+    ...req.body,
+    usuarioId: req.usuario.id,
+  };
 
-  if (!texto) return res.status(400).json({ erro: 'Texto obrigatório' });
-  if (prioridade && !PRIORIDADES.includes(prioridade)) {
-    return res.status(400).json({ erro: 'Prioridade inválida. Use: alta, media ou baixa' });
-  }
-  if (coluna && !COLUNAS.includes(coluna)) {
-    return res.status(400).json({ erro: 'Coluna inválida. Use: afazer, andamento ou concluido' });
-  }
-  if (usuarioId && !UserDB.buscar(Number(usuarioId))) {
-    return res.status(400).json({ erro: 'Usuário não encontrado' });
-  }
-
-  const colTarget = coluna || 'afazer';
-  if (usuarioId && colTarget === 'andamento') {
-    const ativas = DB.listar({ usuarioId, coluna: 'andamento' });
+  const colTarget = dados.coluna || 'afazer';
+  if (colTarget === 'andamento') {
+    const ativas = DB.listar({ usuarioId: req.usuario.id, coluna: 'andamento' });
     if (ativas.length >= 2) {
       return res.status(400).json({ erro: 'Limite de 2 tarefas em andamento por usuário atingido' });
     }
   }
 
-  res.status(201).json(DB.adicionar(req.body));
+  res.status(201).json(DB.adicionar(dados));
 };
 
 exports.atualizar = (req, res) => {
@@ -46,7 +38,7 @@ exports.atualizar = (req, res) => {
 
   if (!atual) return res.status(404).json({ erro: 'Tarefa não encontrada' });
 
-  const { prioridade, coluna, usuarioId } = req.body;
+  const { prioridade, coluna } = req.body;
 
   if (prioridade && !PRIORIDADES.includes(prioridade)) {
     return res.status(400).json({ erro: 'Prioridade inválida. Use: alta, media ou baixa' });
@@ -54,14 +46,11 @@ exports.atualizar = (req, res) => {
   if (coluna && !COLUNAS.includes(coluna)) {
     return res.status(400).json({ erro: 'Coluna inválida. Use: afazer, andamento ou concluido' });
   }
-  if (usuarioId && !UserDB.buscar(Number(usuarioId))) {
-    return res.status(400).json({ erro: 'Usuário não encontrado' });
-  }
 
-  const usr = usuarioId !== undefined ? (usuarioId ? Number(usuarioId) : null) : atual.usuarioId;
+  const usr = req.usuario.id;
   const col = coluna !== undefined ? coluna : atual.coluna;
 
-  if (usr && col === 'andamento') {
+  if (col === 'andamento') {
     const emAndamento = DB.listar({ usuarioId: usr, coluna: 'andamento' }).filter(t => t.id !== id);
     if (emAndamento.length >= 2) {
       return res.status(400).json({ erro: 'Limite de 2 tarefas em andamento por usuário atingido' });

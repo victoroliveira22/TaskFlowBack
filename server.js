@@ -14,9 +14,19 @@ const projetosRoutes = require('./src/routes/projetos.routes');
 const app = express();
 const PORTA = process.env.PORTA || 3001;
 
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:5173'
-}));
+const origensPermitidas = [
+  'https://task-flow-6szdll5dj-victor-dd7b.vercel.app',
+  'http://localhost:5173',
+  process.env.CORS_ORIGIN,
+].filter(Boolean);
+
+app.use(
+  cors({
+    origin: origensPermitidas,
+    credentials: true,
+  })
+);
+
 app.use(express.json());
 app.use(validarContentType);
 app.use(logger);
@@ -35,5 +45,5 @@ app.use((req, res) => {
 });
 
 app.listen(PORTA, () => {
-  console.log(`Servidor rodando em http://localhost:${PORTA}`);
+  console.log(`Servidor rodando na porta ${PORTA}`);
 });

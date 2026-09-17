@@ -1,9 +1,9 @@
 let usuarios = [
   {
     id: 1,
-    nome: 'Alice',
-    email: 'alice@email.com',
-    senha: '123456'
+    nome: 'Victor',
+    email: 'admin',
+    senha: '1234'
   }
 ];
 

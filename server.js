@@ -15,7 +15,7 @@ const app = express();
 const PORTA = process.env.PORTA || 3001;
 
 const origensPermitidas = [
-  'https://task-flow-zeta-vert.vercel.app',
+  'https://task-flow-59j38nmzf-victor-dd7b.vercel.app',
   'http://localhost:5173',
   process.env.CORS_ORIGIN,
 ].filter(Boolean);

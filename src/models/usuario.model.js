@@ -2,7 +2,7 @@ let usuarios = [
   {
     id: 1,
     nome: 'Victor',
-    email: 'admin',
+    email: 'admin@gmail.com',
     senha: '1234'
   }
 ];

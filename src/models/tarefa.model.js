@@ -1,6 +1,4 @@
 let tarefas = [
-  { id: 1, texto: 'Estudar Node.js', prioridade: 'alta', coluna: 'andamento', usuarioId: 1, concluidaEm: null },
-  { id: 2, texto: 'Fazer exercícios', prioridade: 'media', coluna: 'afazer', usuarioId: 2, concluidaEm: null }
 ];
 let proximoId = 3;
 

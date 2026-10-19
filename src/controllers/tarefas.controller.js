@@ -1,75 +1,87 @@
 const DB = require('../models/tarefa.model');
-const UserDB = require('../models/usuario.model');
+const criarErro = require('../utils/criarErro');
 
 const PRIORIDADES = ['alta', 'media', 'baixa'];
 const COLUNAS = ['afazer', 'andamento', 'concluido'];
 
-exports.listar = (req, res) => {
+exports.listar = async (req, res) => {
   const { coluna, usuarioId } = req.query;
-  res.json(DB.listar({ coluna, usuarioId }));
+  const tarefas = await DB.listar({ coluna, usuarioId });
+  res.json(tarefas);
 };
 
-exports.buscarPorId = (req, res) => {
-  const item = DB.buscar(Number(req.params.id));
-  if (!item) return res.status(404).json({ erro: 'Tarefa não encontrada' });
+exports.buscarPorId = async (req, res) => {
+  const item = await DB.buscar(Number(req.params.id));
+  if (!item) {
+    throw criarErro(404, 'Tarefa não encontrada');
+  }
   res.json(item);
 };
 
-exports.criar = (req, res) => {
+exports.criar = async (req, res) => {
   const dados = {
     ...req.body,
-    usuarioId: req.usuario.id,
+    usuarioId: req.usuario ? req.usuario.id : req.body.usuarioId,
   };
 
   const colTarget = dados.coluna || 'afazer';
   if (colTarget === 'andamento') {
-    const ativas = DB.listar({ usuarioId: req.usuario.id, coluna: 'andamento' });
+    const ativas = await DB.listar({ usuarioId: dados.usuarioId, coluna: 'andamento' });
     if (ativas.length >= 2) {
-      return res.status(400).json({ erro: 'Limite de 2 tarefas em andamento por usuário atingido' });
+      throw criarErro(400, 'Limite de 2 tarefas em andamento por usuário atingido');
     }
   }
 
-  res.status(201).json(DB.adicionar(dados));
+  const novaTarefa = await DB.adicionar(dados);
+  res.status(201).json(novaTarefa);
 };
 
-exports.atualizar = (req, res) => {
+exports.atualizar = async (req, res) => {
   const id = Number(req.params.id);
-  const atual = DB.buscar(id);
+  const atual = await DB.buscar(id);
 
-  if (!atual) return res.status(404).json({ erro: 'Tarefa não encontrada' });
+  if (!atual) {
+    throw criarErro(404, 'Tarefa não encontrada');
+  }
 
   const { prioridade, coluna } = req.body;
 
   if (prioridade && !PRIORIDADES.includes(prioridade)) {
-    return res.status(400).json({ erro: 'Prioridade inválida. Use: alta, media ou baixa' });
+    throw criarErro(400, 'Prioridade inválida. Use: alta, media ou baixa');
   }
   if (coluna && !COLUNAS.includes(coluna)) {
-    return res.status(400).json({ erro: 'Coluna inválida. Use: afazer, andamento ou concluido' });
+    throw criarErro(400, 'Coluna inválida. Use: afazer, andamento ou concluido');
   }
 
-  const usr = req.usuario.id;
+  const usr = req.usuario ? req.usuario.id : atual.usuario_id;
   const col = coluna !== undefined ? coluna : atual.coluna;
 
   if (col === 'andamento') {
-    const emAndamento = DB.listar({ usuarioId: usr, coluna: 'andamento' }).filter(t => t.id !== id);
-    if (emAndamento.length >= 2) {
-      return res.status(400).json({ erro: 'Limite de 2 tarefas em andamento por usuário atingido' });
+    const emAndamento = await DB.listar({ usuarioId: usr, coluna: 'andamento' });
+    const filtradas = emAndamento.filter(t => t.id !== id);
+    if (filtradas.length >= 2) {
+      throw criarErro(400, 'Limite de 2 tarefas em andamento por usuário atingido');
     }
   }
 
-  res.json(DB.atualizar(id, req.body));
+  const atualizada = await DB.atualizar(id, req.body);
+  res.json(atualizada);
 };
 
-exports.remover = (req, res) => {
+exports.remover = async (req, res) => {
   const id = Number(req.params.id);
-  const removida = DB.remover(id);
-  if (!removida) return res.status(404).json({ erro: 'Tarefa não encontrada' });
-  res.json({ mensagem: 'Tarefa removida', tarefa: removida });
+  const removida = await DB.remover(id);
+
+  if (!removida) {
+    throw criarErro(404, 'Tarefa não encontrada');
+  }
+
+  res.status(204).send();
 };
 
-exports.estatisticas = (req, res) => {
+exports.estatisticas = async (req, res) => {
   const { coluna } = req.query;
-  const base = coluna ? DB.listar({ coluna }) : DB.listar();
+  const base = coluna ? await DB.listar({ coluna }) : await DB.listar();
 
   res.json({
     total: base.length,

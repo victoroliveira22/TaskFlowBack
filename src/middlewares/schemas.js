@@ -1,18 +1,22 @@
 const schemas = {
+  id: {
+    id: { obrigatorio: true, tipo: 'inteiro' },
+  },
   tarefa: {
     texto: { obrigatorio: true, tipo: 'string' },
     prioridade: { obrigatorio: false, tipo: 'string', enum: ['alta', 'media', 'baixa'] },
     coluna: { obrigatorio: false, tipo: 'string', enum: ['afazer', 'andamento', 'concluido'] },
-    usuarioId: { obrigatorio: false, tipo: 'number' },
+    usuarioId: { obrigatorio: false, tipo: 'inteiro' },
+    projetoId: { obrigatorio: false, tipo: 'inteiro' },
   },
   usuario: {
-    nome: { obrigatorio: true, tipo: 'string', minLength: 3 },
-    email: { obrigatorio: true, tipo: 'string', formato: 'email' },
-    senha: { obrigatorio: true, tipo: 'string', minLength: 6 },
+    nome: { obrigatorio: true, tipo: 'string' },
+    email: { obrigatorio: true, tipo: 'string' },
+    senha: { obrigatorio: true, tipo: 'string' },
   },
   projeto: {
     nome: { obrigatorio: true, tipo: 'string' },
-    descricao: { obrigatorio: false, tipo: 'string', maxLength: 200 },
+    descricao: { obrigatorio: false, tipo: 'string' },
   },
 };
 

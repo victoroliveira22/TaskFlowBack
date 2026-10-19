@@ -1,23 +1,40 @@
-let projetos = [];
-let proximoId = 1;
+const pool = require('../database/db');
 
-exports.listar = () => projetos;
-exports.buscar = id => projetos.find(p => p.id === id);
+module.exports = {
+  listar: async () => {
+    const result = await pool.query('SELECT * FROM projetos ORDER BY id');
+    return result.rows;
+  },
 
-exports.adicionar = ({ nome, descricao }) => {
-  const novo = { id: proximoId++, nome, descricao: descricao || null };
-  projetos.push(novo);
-  return novo;
-};
+  buscar: async (id) => {
+    const result = await pool.query('SELECT * FROM projetos WHERE id = $1', [id]);
+    return result.rows[0] || null;
+  },
 
-exports.atualizar = (id, dados) => {
-  const i = projetos.findIndex(p => p.id === id);
-  if (i === -1) return null;
-  projetos[i] = { ...projetos[i], ...dados, id };
-  return projetos[i];
-};
+  adicionar: async ({ nome, descricao }) => {
+    const query = `
+      INSERT INTO projetos (nome, descricao) 
+      VALUES ($1, $2) 
+      RETURNING *;
+    `;
+    const result = await pool.query(query, [nome, descricao || null]);
+    return result.rows[0];
+  },
 
-exports.remover = id => {
-  const i = projetos.findIndex(p => p.id === id);
-  return i !== -1 ? projetos.splice(i, 1)[0] : null;
+  atualizar: async (id, dados) => {
+    const { nome, descricao } = dados;
+    const query = `
+      UPDATE projetos 
+      SET nome = COALESCE($1, nome), descricao = COALESCE($2, descricao) 
+      WHERE id = $3 
+      RETURNING *;
+    `;
+    const result = await pool.query(query, [nome, descricao, id]);
+    return result.rows[0] || null;
+  },
+
+  remover: async (id) => {
+    const result = await pool.query('DELETE FROM projetos WHERE id = $1 RETURNING *;', [id]);
+    return result.rows[0] || null;
+  }
 };

@@ -9,6 +9,11 @@ const idValido = validar(schemas.id, 'params');
 const tarefaValida = validar(schemas.tarefa, 'body');
 
 router.get('/', tarefasController.listar);
+
+router.get('/prioridades', (req, res) => {
+  res.json(['alta', 'media', 'baixa']);
+});
+
 router.get('/:id', idValido, tarefasController.buscarPorId);
 
 router.post('/',

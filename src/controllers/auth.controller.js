@@ -1,33 +1,40 @@
 const jwt = require('jsonwebtoken');
 const usuarioModel = require('../models/usuario.model');
+const criarErro = require('../utils/criarErro');
 
 const authController = {
-  login(req, res) {
-    const { email, senha } = req.body;
+  async login(req, res, next) {
+    try {
+      const { email, senha } = req.body;
 
-    if (!email || !senha) {
-      return res.status(400).json({ erro: 'Email e senha são obrigatórios' });
+      if (!email || !senha) {
+        throw criarErro(400, 'Email e senha são obrigatórios');
+      }
+
+      const usuario = await usuarioModel.buscarPorEmail(email);
+      if (!usuario) {
+        throw criarErro(401, 'Credenciais inválidas');
+      }
+
+      if (usuario.senha_hash !== senha) {
+        throw criarErro(401, 'Credenciais inválidas');
+      }
+
+      const secret = process.env.JWT_SECRET || 'secret_fallback_key';
+
+      const token = jwt.sign(
+        { id: usuario.id, nome: usuario.nome },
+        secret,
+        { expiresIn: '8h' }
+      );
+
+      res.json({
+        token,
+        usuario: { id: usuario.id, nome: usuario.nome }
+      });
+    } catch (err) {
+      next(err);
     }
-
-    const usuario = usuarioModel.buscarPorEmail(email);
-    if (!usuario) {
-      return res.status(401).json({ erro: 'Credenciais inválidas' });
-    }
-
-    if (usuario.senha !== senha) {
-      return res.status(401).json({ erro: 'Credenciais inválidas' });
-    }
-
-    const token = jwt.sign(
-      { id: usuario.id, nome: usuario.nome },
-      process.env.JWT_SECRET,
-      { expiresIn: '8h' }
-    );
-
-    res.json({
-      token,
-      usuario: { id: usuario.id, nome: usuario.nome }
-    });
   }
 };
 

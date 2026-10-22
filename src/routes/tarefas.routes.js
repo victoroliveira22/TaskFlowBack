@@ -1,38 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const tarefasController = require('../controllers/tarefas.controller');
-const validar = require('../middlewares/validar.middleware');
-const schemas = require('../middlewares/schemas');
-const autenticar = require('../middlewares/autenticar');
-
-const idValido = validar(schemas.id, 'params');
-const tarefaValida = validar(schemas.tarefa, 'body');
+const pool = require('../database/db');
 
 router.get('/', tarefasController.listar);
 
-router.get('/prioridades', (req, res) => {
-  res.json(['alta', 'media', 'baixa']);
+router.get('/prioridades', async (req, res, next) => {
+  try {
+    const result = await pool.query('SELECT * FROM prioridades ORDER BY id');
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
 });
 
-router.get('/:id', idValido, tarefasController.buscarPorId);
-
-router.post('/',
-  autenticar,
-  tarefaValida,
-  tarefasController.criar
-);
-
-router.put('/:id',
-  autenticar,
-  idValido,
-  tarefaValida,
-  tarefasController.atualizar
-);
-
-router.delete('/:id',
-  autenticar,
-  idValido,
-  tarefasController.remover
-);
+router.get('/:id', tarefasController.buscarPorId);
+router.post('/', tarefasController.criar);
+router.put('/:id', tarefasController.atualizar);
+router.delete('/:id', tarefasController.remover);
 
 module.exports = router;

@@ -36,11 +36,17 @@ app.use(validarContentType);
 app.use(logger);
 
 app.get('/', (req, res) => {
-  res.json({ mensagem: 'API TaskFlow rodando com sucesso!' });
+  res.json({ mensagem: 'API rodando nas manha' });
 });
 
-app.get('/prioridade', (req, res) => {
-  res.json(['alta', 'media', 'baixa']);
+// Busca as prioridades reais diretamente do PostgreSQL com seus IDs
+app.get('/prioridades', async (req, res, next) => {
+  try {
+    const result = await pool.query('SELECT * FROM prioridades ORDER BY id');
+    res.json(result.rows);
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.use('/auth', authRoutes);
@@ -64,5 +70,5 @@ pool.query('SELECT NOW()', (err, res) => {
 });
 
 app.listen(PORTA, () => {
-  console.log(`Servidor rodando na porta ${PORTA}`);
+  console.log(`http://localhost:${PORTA}`);
 });

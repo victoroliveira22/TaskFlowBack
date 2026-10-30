@@ -1,50 +1,87 @@
-const pool = require('../database/db');
+const prisma = require('../database/prisma');
+
+function formatarId(valor) {
+  if (valor === '' || valor === undefined || valor === null) return null;
+  const num = Number(valor);
+  return Number.isNaN(num) ? null : num;
+}
+
+const camposSeguros = {
+  id: true,
+  nome: true,
+  email: true,
+};
 
 module.exports = {
   listar: async () => {
-    const result = await pool.query('SELECT id, nome, email FROM usuarios ORDER BY id');
-    return result.rows;
+    return await prisma.usuarios.findMany({
+      select: camposSeguros,
+      orderBy: { id: 'asc' },
+    });
   },
 
   buscar: async (id) => {
-    const result = await pool.query('SELECT id, nome, email FROM usuarios WHERE id = $1', [id]);
-    return result.rows[0] || null;
+    const idNum = formatarId(id);
+    if (!idNum) return null;
+
+    return await prisma.usuarios.findUnique({
+      where: { id: idNum },
+      select: camposSeguros,
+    });
   },
 
   buscarPorEmail: async (email) => {
-    const result = await pool.query('SELECT * FROM usuarios WHERE email = $1', [email]);
-    return result.rows[0] || null;
+    if (!email) return null;
+    return await prisma.usuarios.findUnique({
+      where: { email },
+    });
   },
 
-  adicionar: async ({ nome, email, senha }) => {
-    const query = `
-      INSERT INTO usuarios (nome, email, senha) 
-      VALUES ($1, $2, $3) 
-      RETURNING id, nome, email;
-    `;
-    const result = await pool.query(query, [nome, email, senha]);
-    return result.rows[0];
+  adicionar: async (dados) => {
+    const { nome, email, senha, senha_hash } = dados;
+
+    return await prisma.usuarios.create({
+      data: {
+        nome,
+        email,
+        senha_hash: senha || senha_hash,
+      },
+      select: camposSeguros,
+    });
   },
 
   atualizar: async (id, dados) => {
-    const { nome, email, senha } = dados;
-    const query = `
-      UPDATE usuarios 
-      SET nome = COALESCE($1, nome), 
-          email = COALESCE($2, email), 
-          senha = COALESCE($3, senha) 
-      WHERE id = $4 
-      RETURNING id, nome, email;
-    `;
-    const result = await pool.query(query, [nome, email, senha, id]);
-    return result.rows[0] || null;
+    const idNum = formatarId(id);
+    if (!idNum) return null;
+
+    const atual = await prisma.usuarios.findUnique({ where: { id: idNum } });
+    if (!atual) return null;
+
+    const { nome, email, senha, senha_hash } = dados;
+
+    return await prisma.usuarios.update({
+      where: { id: idNum },
+      data: {
+        nome: nome !== undefined ? nome : atual.nome,
+        email: email !== undefined ? email : atual.email,
+        senha_hash: (senha || senha_hash) !== undefined ? (senha || senha_hash) : atual.senha_hash,
+      },
+      select: camposSeguros,
+    });
   },
 
   remover: async (id) => {
-    const result = await pool.query(
-      'DELETE FROM usuarios WHERE id = $1 RETURNING id, nome, email;',
-      [id]
-    );
-    return result.rows[0] || null;
-  }
+    const idNum = formatarId(id);
+    if (!idNum) return null;
+
+    try {
+      return await prisma.usuarios.delete({
+        where: { id: idNum },
+        select: camposSeguros,
+      });
+    } catch (erro) {
+      if (erro.code === 'P2025') return null;
+      throw erro;
+    }
+  },
 };

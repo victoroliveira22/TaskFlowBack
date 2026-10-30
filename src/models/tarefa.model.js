@@ -1,4 +1,4 @@
-const pool = require('../database/db');
+const prisma = require('../database/prisma');
 
 function formatarId(valor) {
   if (valor === '' || valor === undefined || valor === null) return null;
@@ -6,15 +6,41 @@ function formatarId(valor) {
   return Number.isNaN(num) ? null : num;
 }
 
+const incluirNomes = {
+  projetos: { select: { nome: true } },
+  usuarios: { select: { nome: true } },
+  prioridades: { select: { nome: true } },
+};
+
+function formatarTarefa(tarefa) {
+  if (!tarefa) return null;
+  const { projetos, usuarios, prioridades, ...resto } = tarefa;
+  return {
+    ...resto,
+    projeto: projetos?.nome || null,
+    usuario: usuarios?.nome || null,
+    prioridade: prioridades?.nome || null,
+  };
+}
+
 module.exports = {
   listar: async () => {
-    const result = await pool.query('SELECT * FROM tarefas ORDER BY id');
-    return result.rows;
+    const tarefas = await prisma.tarefas.findMany({
+      include: incluirNomes,
+      orderBy: { id: 'asc' },
+    });
+    return tarefas.map(formatarTarefa);
   },
 
   buscar: async (id) => {
-    const result = await pool.query('SELECT * FROM tarefas WHERE id = $1', [id]);
-    return result.rows[0] || null;
+    const idNum = formatarId(id);
+    if (!idNum) return null;
+
+    const tarefa = await prisma.tarefas.findUnique({
+      where: { id: idNum },
+      include: incluirNomes,
+    });
+    return formatarTarefa(tarefa);
   },
 
   adicionar: async (dados) => {
@@ -27,28 +53,35 @@ module.exports = {
       usuarioId,
       projeto_id,
       projetoId,
+      ordem,
     } = dados;
 
-    const prioId = formatarId(idprioridade !== undefined ? idprioridade : prioridade);
+    const prioId = formatarId(idprioridade !== undefined ? idprioridade : prioridade) || 2;
+    const userId = formatarId(usuario_id || usuarioId);
+    const projId = formatarId(projeto_id || projetoId);
 
-    const query = `
-      INSERT INTO tarefas (texto, idprioridade, coluna, usuario_id, projeto_id) 
-      VALUES ($1, $2, $3, $4, $5) 
-      RETURNING *;
-    `;
-    const values = [
-      texto,
-      prioId,
-      coluna || 'afazer',
-      formatarId(usuario_id || usuarioId),
-      formatarId(projeto_id || projetoId),
-    ];
+    const tarefa = await prisma.tarefas.create({
+      data: {
+        texto,
+        coluna: coluna || 'todo',
+        ordem: Number(ordem) || 0,
+        idprioridade: prioId,
+        usuario_id: userId,
+        projeto_id: projId,
+      },
+      include: incluirNomes,
+    });
 
-    const result = await pool.query(query, values);
-    return result.rows[0];
+    return formatarTarefa(tarefa);
   },
 
   atualizar: async (id, dados) => {
+    const idNum = formatarId(id);
+    if (!idNum) return null;
+
+    const atual = await prisma.tarefas.findUnique({ where: { id: idNum } });
+    if (!atual) return null;
+
     const {
       texto,
       idprioridade,
@@ -61,32 +94,46 @@ module.exports = {
     } = dados;
 
     const prioId = formatarId(idprioridade !== undefined ? idprioridade : prioridade);
+    const userId = formatarId(usuario_id || usuarioId);
+    const projId = formatarId(projeto_id || projetoId);
 
-    const query = `
-      UPDATE tarefas SET 
-      texto = $1, 
-      idprioridade = $2, 
-      coluna = $3, 
-      usuario_id = $4, 
-      projeto_id = $5 
-      WHERE id = $6 
-      RETURNING *;
-    `;
-    const values = [
-      texto,
-      prioId,
-      coluna || 'afazer',
-      formatarId(usuario_id || usuarioId),
-      formatarId(projeto_id || projetoId),
-      id,
-    ];
+    let iniciadaEm = atual.iniciada_em;
+    let concluidaEm = atual.concluida_em;
 
-    const result = await pool.query(query, values);
-    return result.rows[0] || null;
+    const novaColuna = coluna || atual.coluna;
+    if (novaColuna === 'emAndamento' && !iniciadaEm) iniciadaEm = new Date();
+    if (novaColuna === 'concluido' && !concluidaEm) concluidaEm = new Date();
+
+    const tarefa = await prisma.tarefas.update({
+      where: { id: idNum },
+      data: {
+        texto: texto !== undefined ? texto : atual.texto,
+        coluna: novaColuna,
+        idprioridade: prioId !== null ? prioId : atual.idprioridade,
+        usuario_id: userId !== null ? userId : atual.usuario_id,
+        projeto_id: projId !== null ? projId : atual.projeto_id,
+        iniciada_em: iniciadaEm,
+        concluida_em: concluidaEm,
+      },
+      include: incluirNomes,
+    });
+
+    return formatarTarefa(tarefa);
   },
 
   remover: async (id) => {
-    const result = await pool.query('DELETE FROM tarefas WHERE id = $1 RETURNING *;', [id]);
-    return result.rows[0] || null;
+    const idNum = formatarId(id);
+    if (!idNum) return null;
+
+    try {
+      const tarefa = await prisma.tarefas.delete({
+        where: { id: idNum },
+        include: incluirNomes,
+      });
+      return formatarTarefa(tarefa);
+    } catch (erro) {
+      if (erro.code === 'P2025') return null;
+      throw erro;
+    }
   },
 };

@@ -1,40 +1,70 @@
-const pool = require('../database/db');
+const prisma = require('../database/prisma');
+
+function formatarId(valor) {
+  if (valor === '' || valor === undefined || valor === null) return null;
+  const num = Number(valor);
+  return Number.isNaN(num) ? null : num;
+}
 
 module.exports = {
   listar: async () => {
-    const result = await pool.query('SELECT * FROM projetos ORDER BY id');
-    return result.rows;
+    return await prisma.projetos.findMany({
+      orderBy: { id: 'asc' },
+    });
   },
 
   buscar: async (id) => {
-    const result = await pool.query('SELECT * FROM projetos WHERE id = $1', [id]);
-    return result.rows[0] || null;
+    const idNum = formatarId(id);
+    if (!idNum) return null;
+
+    return await prisma.projetos.findUnique({
+      where: { id: idNum },
+    });
   },
 
-  adicionar: async ({ nome, descricao }) => {
-    const query = `
-      INSERT INTO projetos (nome, descricao) 
-      VALUES ($1, $2) 
-      RETURNING *;
-    `;
-    const result = await pool.query(query, [nome, descricao || null]);
-    return result.rows[0];
+  adicionar: async (dados) => {
+    const { nome, descricao, usuario_id, usuarioId } = dados;
+
+    return await prisma.projetos.create({
+      data: {
+        nome,
+        descricao: descricao || null,
+        usuario_id: formatarId(usuario_id || usuarioId) || 1,
+      },
+    });
   },
 
   atualizar: async (id, dados) => {
-    const { nome, descricao } = dados;
-    const query = `
-      UPDATE projetos 
-      SET nome = COALESCE($1, nome), descricao = COALESCE($2, descricao) 
-      WHERE id = $3 
-      RETURNING *;
-    `;
-    const result = await pool.query(query, [nome, descricao, id]);
-    return result.rows[0] || null;
+    const idNum = formatarId(id);
+    if (!idNum) return null;
+
+    const atual = await prisma.projetos.findUnique({ where: { id: idNum } });
+    if (!atual) return null;
+
+    const { nome, descricao, usuario_id, usuarioId } = dados;
+    const userId = formatarId(usuario_id || usuarioId);
+
+    return await prisma.projetos.update({
+      where: { id: idNum },
+      data: {
+        nome: nome !== undefined ? nome : atual.nome,
+        descricao: descricao !== undefined ? descricao : atual.descricao,
+        usuario_id: userId !== null ? userId : atual.usuario_id,
+      },
+    });
   },
 
   remover: async (id) => {
-    const result = await pool.query('DELETE FROM projetos WHERE id = $1 RETURNING *;', [id]);
-    return result.rows[0] || null;
-  }
+    const idNum = formatarId(id);
+    if (!idNum) return null;
+
+    try {
+      return await prisma.projetos.delete({
+        where: { id: idNum },
+      });
+    } catch (erro) {
+      if (erro.code === 'P2025') return null;
+      throw erro;
+    }
+  },
 };

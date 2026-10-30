@@ -2,18 +2,22 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
 
 const logger = require('./src/middlewares/logger');
 const validarContentType = require('./src/middlewares/validarContentType');
 const tratarErros = require('./src/middlewares/erro.middleware');
 const criarErro = require('./src/utils/criarErro');
 
+const openapi = require('./src/docs/openapi');
+
 const authRoutes = require('./src/routes/auth.routes');
 const tarefasRoutes = require('./src/routes/tarefas.routes');
 const usuariosRoutes = require('./src/routes/usuarios.routes');
 const projetosRoutes = require('./src/routes/projetos.routes');
 
-const pool = require('./src/database/db');
+const prioridadeModel = require('./src/models/prioridade.model');
+const prisma = require('./src/database/prisma');
 
 const app = express();
 const PORTA = process.env.PORTA || 3001;
@@ -35,15 +39,17 @@ app.use(express.json());
 app.use(validarContentType);
 app.use(logger);
 
+
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openapi));
+
 app.get('/', (req, res) => {
   res.json({ mensagem: 'API rodando nas manha' });
 });
 
-// Busca as prioridades reais diretamente do PostgreSQL com seus IDs
 app.get('/prioridades', async (req, res, next) => {
   try {
-    const result = await pool.query('SELECT * FROM prioridades ORDER BY id');
-    res.json(result.rows);
+    const prioridades = await prioridadeModel.listar();
+    res.json(prioridades);
   } catch (err) {
     next(err);
   }
@@ -61,14 +67,15 @@ app.use((req, res) => {
 
 app.use(tratarErros);
 
-pool.query('SELECT NOW()', (err, res) => {
-  if (err) {
+prisma.$connect()
+  .then(() => {
+    console.log('Banco de dados (Prisma) conectado com sucesso!');
+  })
+  .catch((err) => {
     console.error('Erro ao conectar ao banco de dados:', err.message);
-  } else {
-    console.log('Banco de dados conectado com sucesso:', res.rows[0].now);
-  }
-});
+  });
 
 app.listen(PORTA, () => {
-  console.log(`http://localhost:${PORTA}`);
+  console.log(`Servidor rodando em: http://localhost:${PORTA}`);
+  console.log(`Documentação Swagger em: http://localhost:${PORTA}/docs`);
 });

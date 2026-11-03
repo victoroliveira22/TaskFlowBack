@@ -60,8 +60,8 @@ exports.atualizar = async (req, res, next) => {
     if (col === 'andamento') {
       const emAndamento = await DB.listar({ usuarioId: usr, coluna: 'andamento' });
       const filtradas = emAndamento.filter(t => t.id !== id);
-      if (filtradas.length >= 2) {
-        throw criarErro(400, 'Limite de 2 tarefas em andamento por usuário atingido');
+      if (filtradas.length >= 5) {
+        throw criarErro(400, 'Limite de 5 tarefas em andamento por usuário atingido');
       }
     }
 

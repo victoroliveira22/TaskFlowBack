@@ -79,3 +79,5 @@ app.listen(PORTA, () => {
   console.log(`Servidor rodando em: http://localhost:${PORTA}`);
   console.log(`Documentação Swagger em: http://localhost:${PORTA}/docs`);
 });
+
+module.exports = app;

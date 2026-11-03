@@ -27,8 +27,8 @@ exports.criar = async (req, res, next) => {
     const colTarget = dados.coluna || 'afazer';
     if (colTarget === 'andamento') {
       const ativas = await DB.listar({ usuarioId: dados.usuarioId, coluna: 'andamento' });
-      if (ativas.length >= 2) {
-        throw criarErro(400, 'Limite de 2 tarefas em andamento por usuário atingido');
+      if (ativas.length >= 5) {
+        throw criarErro(400, 'Limite de 5 tarefas em andamento por usuário atingido');
       }
     }
 

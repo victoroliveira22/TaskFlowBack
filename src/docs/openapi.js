@@ -8,9 +8,7 @@ module.exports = {
     version: '1.0.0',
     description: 'API do TaskFlow',
   },
-  servers: [
-    { url: '/', description: 'Este servidor' },
-  ],
+  servers: [{ url: '/', description: 'Este servidor' }],
   security: [{ bearerAuth: [] }],
   paths: {
     ...tarefas.paths,

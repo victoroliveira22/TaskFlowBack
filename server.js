@@ -17,7 +17,6 @@ const usuariosRoutes = require('./src/routes/usuarios.routes');
 const projetosRoutes = require('./src/routes/projetos.routes');
 
 const prioridadeModel = require('./src/models/prioridade.model');
-const prisma = require('./src/database/prisma');
 
 const app = express();
 const PORTA = process.env.PORTA || 3001;
@@ -78,18 +77,11 @@ app.use((req, res) => {
 
 app.use(tratarErros);
 
-prisma
-  .$connect()
-  .then(() => {
-    console.log('Banco de dados (Prisma) conectado com sucesso!');
-  })
-  .catch((err) => {
-    console.error('Erro ao conectar ao banco de dados:', err.message);
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORTA, () => {
+    console.log(`Servidor rodando em: http://localhost:${PORTA}`);
+    console.log(`Documentação Swagger em: http://localhost:${PORTA}/docs`);
   });
-
-app.listen(PORTA, () => {
-  console.log(`Servidor rodando em: http://localhost:${PORTA}`);
-  console.log(`Documentação Swagger em: http://localhost:${PORTA}/docs`);
-});
+}
 
 module.exports = app;
